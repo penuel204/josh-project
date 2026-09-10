@@ -1,0 +1,57 @@
+CREATE DATABASE IF NOT EXISTS project_josh CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE project_josh;
+
+CREATE TABLE IF NOT EXISTS accounts (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  full_name VARCHAR(160) NOT NULL,
+  registration_no VARCHAR(80) NOT NULL UNIQUE,
+  government_unit VARCHAR(160) NOT NULL,
+  photo_data MEDIUMTEXT NULL,
+  email VARCHAR(190) NULL UNIQUE,
+  password_hash VARCHAR(255) NULL,
+  status ENUM('active', 'inactive', 'deleted') NOT NULL DEFAULT 'active',
+  last_login_at TIMESTAMP NULL,
+  role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS reports (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  account_id INT UNSIGNED NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  content MEDIUMTEXT NOT NULL,
+  attachments JSON NULL,
+  status VARCHAR(40) NOT NULL DEFAULT 'Draft',
+  feedback TEXT NULL,
+  rating TINYINT UNSIGNED NULL,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT reports_account_fk FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
+);
+
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS email VARCHAR(190) NULL UNIQUE;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255) NULL;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS status ENUM('active', 'inactive', 'deleted') NOT NULL DEFAULT 'active';
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP NULL;
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS feedback TEXT NULL;
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS rating TINYINT UNSIGNED NULL;
+
+CREATE TABLE IF NOT EXISTS government_units (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, name VARCHAR(160) NOT NULL UNIQUE, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS tasks (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, account_id INT UNSIGNED NOT NULL, title VARCHAR(255) NOT NULL, details TEXT NULL, due_at DATETIME NULL, status ENUM('assigned','in_progress','completed') NOT NULL DEFAULT 'assigned', created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE);
+CREATE TABLE IF NOT EXISTS notifications (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, account_id INT UNSIGNED NULL, title VARCHAR(255) NOT NULL, message TEXT NOT NULL, type VARCHAR(40) NOT NULL DEFAULT 'announcement', read_at TIMESTAMP NULL, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE);
+CREATE TABLE IF NOT EXISTS system_announcements (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, title VARCHAR(255) NOT NULL, message TEXT NOT NULL, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS activity_log (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, account_id INT UNSIGNED NOT NULL, action VARCHAR(80) NOT NULL, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE);
+
+CREATE TABLE IF NOT EXISTS account_settings (
+  account_id INT UNSIGNED PRIMARY KEY,
+  workspace_name VARCHAR(160) NOT NULL DEFAULT 'Office of Public Administration',
+  timezone VARCHAR(80) NOT NULL DEFAULT 'UTC',
+  default_unit VARCHAR(160) NOT NULL DEFAULT 'Public Administration',
+  email_notifications TINYINT(1) NOT NULL DEFAULT 1,
+  CONSTRAINT settings_account_fk FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
+);
+
+INSERT INTO accounts (full_name, registration_no, government_unit, role)
+SELECT 'Jordan Smith', 'ADMIN-001', 'Public Administration', 'admin'
+WHERE NOT EXISTS (SELECT 1 FROM accounts WHERE role = 'admin');
+
+INSERT IGNORE INTO government_units (name) VALUES ('Public Administration'), ('Citizen Services'), ('Policy & Planning'), ('Finance & Operations');
