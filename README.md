@@ -42,15 +42,25 @@ Make sure you have the following installed:
   ### Project Folder Structure:
 
    project-root/
+   
 ├── index.html
+
 ├── login.html
+
 ├── styles.css
+
 ├── app.js
+
 ├── api.php
+
 ├── config.php
+
 ├── database.sql
+
 └── README.md
 
 ### Contact
+
 Names: Penuel IRUMVA
+
 Email: penuelirumva@gmail.com
