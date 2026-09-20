@@ -1,0 +1,9 @@
+FROM dunglas/frankenphp
+
+WORKDIR /app
+
+COPY . /app
+
+ENV SERVER_NAME=:8000
+
+CMD ["frankenphp", "php-server", "--root", "/app", "--listen", ":8000"]
